@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Загрузка файла</title>
+</head>
+<body>
+
+        <h1>Сервис по генерации моделей машинного обучения для промышленности</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label for="file">Загрузите файл (CSV):</label>
+            <input type="file" id="file" name="file" accept=".csv" required><br><br>
+            <button type="submit">Загрузить</button>
+        </form>
+
+</body>
+</html>

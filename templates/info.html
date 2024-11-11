@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выбор целевой метрики</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/info.css') }}">
+</head>
+<body>
+    <h1>Выберите целевую метрику</h1>
+    <form id="targetForm" action="/info" method="post">
+        <label for="target_column">Выберите целевой столбец:</label>
+        <select id="target_column" name="target_column" required>
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select><br><br>
+        <button type="submit">Обучить модель</button>
+    </form>
+
+    <!-- Маска загрузки -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p> Идет обучение модели... Пожалуйста, подождите.</p>
+    </div>
+
+    <script>
+        // Функция для отображения маски
+        function showLoadingOverlay(event) {
+            event.preventDefault(); // Предотвратить стандартное поведение формы
+
+            // Показать маску загрузки
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            // Отправка формы через JavaScript после показа маски
+            document.getElementById('targetForm').submit();
+        }
+
+        // Привязка функции к событию отправки формы
+        document.getElementById('targetForm').onsubmit = showLoadingOverlay;
+    </script>
+</body>
+</html>

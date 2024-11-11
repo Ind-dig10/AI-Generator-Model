@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Результаты модели</title>
+    <style>
+        /* Основные стили для страниц, таблиц и заголовков */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #333; margin-top: 20px; }
+        .chart-container {
+            width: 60%;
+            margin-top: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 20px; /* Расстояние между кнопками */
+            justify-content: center; /* Центрирование кнопок */
+            margin-top: 20px; /* Отступ сверху */
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Результаты оценки моделей</h1>
+
+    <!-- Контейнеры для графиков -->
+    <div class="chart-container">
+        <canvas id="mseChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="maeChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="r2Chart"></canvas>
+    </div>
+
+    <script>
+        // Получаем данные из Flask как JSON-объект
+        const results = {{ results | tojson }};
+
+        // Преобразуем результаты в массивы для графиков
+        const models = Object.keys(results).filter(model => model !== 'Лучшая модель' && model !== 'Лучшее MSE');
+        const mseValues = models.map(model => results[model]['MSE']);
+        const maeValues = models.map(model => results[model]['MAE']);
+        const r2Values = models.map(model => results[model]['R2']);
+
+        // Настройки для графиков
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        };
+
+        // Построение графика MSE
+        new Chart(document.getElementById('mseChart'), {
+            type: 'bar',
+            data: {
+                labels: models,
+                datasets: [{
+                    label: 'MSE (Среднеквадратичная ошибка)',
+                    data: mseValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Построение графика MAE
+        new Chart(document.getElementById('maeChart'), {
+            type: 'bar',
+            data: {
+                labels: models,
+                datasets: [{
+                    label: 'MAE (Средняя абсолютная ошибка)',
+                    data: maeValues,
+                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Построение графика R²
+        new Chart(document.getElementById('r2Chart'), {
+            type: 'bar',
+            data: {
+                labels: models,
+                datasets: [{
+                    label: 'R² Score',
+                    data: r2Values,
+                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+    </script>
+    <h2>Итоги по метрикам моделей</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Модель</th>
+                <th>MSE</th>
+                <th>MAE</th>
+                <th>R2</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Динамически создаем строки таблицы для каждой модели -->
+            {% for model, metrics in results.items() %}
+                {% if model not in ['Лучшая модель', 'Лучшее MSE'] %}
+                    <tr>
+                        <td>{{ model }}</td>
+                        <td>{{ metrics.MSE | round(4) }}</td>
+                        <td>{{ metrics.MAE | round(4) }}</td>
+                        <td>{{ metrics.R2 | round(4) }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Лучшая модель: {{ results['Лучшая модель'] }}</h3>
+    <p>С минимальным MSE: {{ results['Лучшее MSE'] | round(4) }}</p>
+
+    <div class="button-container">
+        <form action="/download_model" method="get">
+            <button type="submit">Скачать лучшую модель</button>
+        </form>
+
+        <form action="/test_model_page" method="get">
+            <button type="submit">Протестировать модель</button>
+        </form>
+    </div>
+</body>
+</html>
